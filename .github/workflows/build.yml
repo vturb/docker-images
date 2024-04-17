@@ -22,6 +22,9 @@ jobs:
         with:
           files: "repos/**/*"
 
+      - name: Login into GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Build docker images
         if: steps.changed-files.outputs.any_changed == 'true'
         id: build
@@ -71,12 +74,9 @@ jobs:
       - name: Push docker images
         if: steps.build.outputs.repos != ''
         env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOS: ${{ steps.build.outputs.repos }}
         run: |
-          # login into ghcr.io
-          echo $TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
-
-          for repo in $repos; do
+          for repo in $REPOS; do
             echo "Pushing $repo"
             docker push $repo
           done
