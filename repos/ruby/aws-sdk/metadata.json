@@ -1,0 +1,4 @@
+{
+    "name": "vturb/ruby-aws-sdk",
+    "description": "Alpine ruby with full aws-sdk"
+}
