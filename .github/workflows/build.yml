@@ -5,7 +5,9 @@ on:
     branches:
       - master
 
-permissions: {}
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build:
