@@ -1,0 +1,82 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build modified repos
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # OR "2" -> To retrieve the preceding commit.
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: "repos/**/*"
+
+      - name: Build docker images
+        if: steps.changed-files.outputs.any_changed == 'true'
+        id: build
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          baseFolder=`pwd`
+          output=""
+
+          for file in ${ALL_CHANGED_FILES}; do
+            # access root folder
+            cd $baseFolder
+            
+            # entry in folder of changed file
+            cd $(dirname $file)
+
+            # check it's a repo with metadata
+            if [ -f "metadata.yml" ]; then
+              name=`jq -r '.name' metadata.yml`
+              description=`jq -r '.description' metadata.yml`
+              repoName=ghcr.io/$name:latest
+
+              echo "Building $name: $description"
+
+              # pull latest version (ignore errors)
+              docker pull $repoName || true
+
+              # build docker image
+              docker build -t $repoName .
+
+              # add name of build into output
+              if [ -z "$output" ]; then
+                output="$repoName"
+              else
+                output="$output $repoName"
+              fi
+            fi
+          done
+
+          if [ -z "$output" ]; then
+            echo "No repos to build"
+          else
+            echo "Built repos: $output"
+            echo "repos=$output" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push docker images
+        if: steps.build.outputs.repos != ''
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # login into ghcr.io
+          echo $TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+          for repo in $repos; do
+            echo "Pushing $repo"
+            docker push $repo
+          done
