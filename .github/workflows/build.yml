@@ -39,9 +39,9 @@ jobs:
             cd $(dirname $file)
 
             # check it's a repo with metadata
-            if [ -f "metadata.yml" ]; then
-              name=`jq -r '.name' metadata.yml`
-              description=`jq -r '.description' metadata.yml`
+            if [ -f "metadata.json" ]; then
+              name=`jq -r '.name' metadata.json`
+              description=`jq -r '.description' metadata.json`
               repoName=ghcr.io/$name:latest
 
               echo "Building $name: $description"
