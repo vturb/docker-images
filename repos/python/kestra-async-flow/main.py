@@ -8,7 +8,7 @@ def main():
     flowId = os.getenv('FLOW_ID')
 
     # Substitua com os parâmetros necessários para o seu flow
-    flow_parameters = json.loads(os.getenv('FLOW_PARAMETERS'), '{}')
+    flow_parameters = json.loads(os.getenv('FLOW_PARAMETERS', '{}'))
 
     try:
         flow = Flow()
