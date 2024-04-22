@@ -10,6 +10,11 @@ def main():
     # Substitua com os parâmetros necessários para o seu flow
     flow_parameters = json.loads(os.getenv('FLOW_PARAMETERS', '{}'))
 
+    # verifica cada indice dos parametros para converter em string (json) caso seja um dict
+    for key, value in flow_parameters.items():
+        if isinstance(value, dict):
+            flow_parameters[key] = json.dumps(value)
+
     try:
         flow = Flow()
         flow.wait_for_completion = os.getenv('WAIT_FOR_COMPLETION', 'true').lower() == 'true'
